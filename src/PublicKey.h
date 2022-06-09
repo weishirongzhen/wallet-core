@@ -24,7 +24,7 @@ class PublicKey {
     /// The number of bytes in a ed25519 public key.
     static const size_t ed25519Size = 32;
 
-    static const size_t ed25519ExtendedSize = 64;
+    static const size_t ed25519DoubleExtendedSize = 2 * 2 * 32;
 
     /// The number of bytes in a secp256k1 and nist256p1 extended public key.
     static const size_t secp256k1ExtendedSize = 65;
@@ -71,7 +71,7 @@ class PublicKey {
     ///
     /// The public key hash is computed by applying the hasher to the public key
     /// bytes and then prepending the prefix.
-    Data hash(const Data& prefix, Hash::Hasher hasher = Hash::sha256ripemd, bool skipTypeByte = false) const;
+    Data hash(const Data& prefix, Hash::Hasher hasher = Hash::HasherSha256ripemd, bool skipTypeByte = false) const;
 
     /// Recover public key from signature (SECP256k1Extended)
     static PublicKey recover(const Data& signature, const Data& message);

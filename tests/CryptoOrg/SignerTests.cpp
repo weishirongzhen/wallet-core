@@ -30,13 +30,13 @@ TEST(CryptoorgSigner, SignTx_DDCCE4) {
     message.set_to_address("cro1xpahy6c7wldxacv6ld99h435mhvfnsup24vcus");
     auto amountOfTx = message.add_amounts();
     amountOfTx->set_denom("basecro");
-    amountOfTx->set_amount(100000000);
+    amountOfTx->set_amount("100000000");
 
     auto& fee = *input.mutable_fee();
     fee.set_gas(200000);
     auto amountOfFee = fee.add_amounts();
     amountOfFee->set_denom("basecro");
-    amountOfFee->set_amount(5000);
+    amountOfFee->set_amount("5000");
 
     std::string json;
     google::protobuf::util::MessageToJsonString(input, &json);
@@ -74,7 +74,7 @@ TEST(CryptoorgSigner, SignTx_DDCCE4) {
     auto privateKey = parse_hex("200e439e39cf1aad465ee3de6166247f914cbc0f823fc2dd48bf16dcd556f39d");
     input.set_private_key(privateKey.data(), privateKey.size());
 
-    auto output = Cosmos::Signer::sign(input);
+    auto output = Cosmos::Signer::sign(input, TWCoinTypeCryptoOrg);
 
     assertJSONEqual(output.json(), R"(
         {
@@ -127,7 +127,7 @@ TEST(CryptoorgSigner, SignJson) {
     auto inputJson = R"({"accountNumber":"125798","chainId":"crypto-org-chain-mainnet-1","fee":{"amounts":[{"denom":"basecro","amount":"5000"}],"gas":"200000"},"messages":[{"sendCoinsMessage":{"fromAddress":"cro1ctwtcwpgksky988dhth6jslxveumgu0d45zgf0","toAddress":"cro1xpahy6c7wldxacv6ld99h435mhvfnsup24vcus","amounts":[{"denom":"basecro","amount":"100000000"}]}}]})";
     auto privateKey = parse_hex("200e439e39cf1aad465ee3de6166247f914cbc0f823fc2dd48bf16dcd556f39d");
 
-    auto outputJson = Cosmos::Signer::signJSON(inputJson, privateKey);
+    auto outputJson = Cosmos::Signer::signJSON(inputJson, privateKey, TWCoinTypeCryptoOrg);
 
     assertJSONEqual(outputJson, R"(
         {

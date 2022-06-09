@@ -31,10 +31,6 @@ Keys::Keys(ostream& out, const Coins& coins) : _out(out), _coins(coins) {
 void privateKeyToResult(const PrivateKey& priKey, string& res_out) {
     // take the key, but may need to take extension as well
     res_out = hex(priKey.bytes);
-    if (priKey.extensionBytes.size() > 0) {
-        res_out += hex(priKey.extensionBytes);
-        res_out += hex(priKey.chainCodeBytes);
-    }
 }
 
 bool Keys::newKey(const string& coinid, string& res) {

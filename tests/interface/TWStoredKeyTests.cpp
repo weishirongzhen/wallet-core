@@ -132,6 +132,50 @@ TEST(TWStoredKey, addressAddRemove) {
     EXPECT_EQ(TWStoredKeyAccount(key.get(), 1001), nullptr);
 }
 
+TEST(TWStoredKey, addressAddRemoveDerivationPath) {
+    const auto passwordString = WRAPS(TWStringCreateWithUTF8Bytes("password"));
+    const auto password = WRAPD(TWDataCreateWithBytes(reinterpret_cast<const uint8_t *>(TWStringUTF8Bytes(passwordString.get())), TWStringSize(passwordString.get())));
+
+    const auto coin = TWCoinTypeBitcoin;
+    const auto key = createAStoredKey(coin, password.get());
+
+    const auto wallet = WRAP(TWHDWallet, TWStoredKeyWallet(key.get(), password.get()));
+    const auto accountCoin = WRAP(TWAccount, TWStoredKeyAccountForCoin(key.get(), coin, wallet.get()));
+    const auto accountAddress = WRAPS(TWAccountAddress(accountCoin.get()));
+    EXPECT_EQ(string(TWStringUTF8Bytes(accountAddress.get())), "bc1qturc268v0f2srjh4r2zu4t6zk4gdutqd5a6zny");
+
+    EXPECT_EQ(TWStoredKeyAccountCount(key.get()), 1);
+    const auto accountIdx = WRAP(TWAccount, TWStoredKeyAccount(key.get(), 0));
+
+    const auto derivationPath0 = "m/84'/0'/0'/0/0";
+    const auto derivationPath1 = "m/84'/0'/0'/1/0";
+
+    TWStoredKeyRemoveAccountForCoinDerivationPath(key.get(), coin, WRAPS(TWStringCreateWithUTF8Bytes(derivationPath1)).get());
+    EXPECT_EQ(TWStoredKeyAccountCount(key.get()), 1);
+
+    TWStoredKeyRemoveAccountForCoinDerivationPath(key.get(), coin, WRAPS(TWStringCreateWithUTF8Bytes(derivationPath0)).get());
+    EXPECT_EQ(TWStoredKeyAccountCount(key.get()), 0);
+}
+
+TEST(TWStoredKey, addressAddDerivation) {
+    const auto passwordString = WRAPS(TWStringCreateWithUTF8Bytes("password"));
+    const auto password = WRAPD(TWDataCreateWithBytes(reinterpret_cast<const uint8_t *>(TWStringUTF8Bytes(passwordString.get())), TWStringSize(passwordString.get())));
+
+    const auto coin = TWCoinTypeBitcoin;
+    const auto key = createAStoredKey(coin, password.get());
+    const auto wallet = WRAP(TWHDWallet, TWStoredKeyWallet(key.get(), password.get()));
+
+    const auto accountCoin1 = WRAP(TWAccount, TWStoredKeyAccountForCoinDerivation(key.get(), coin, TWDerivationDefault, wallet.get()));
+    const auto accountAddress1 = WRAPS(TWAccountAddress(accountCoin1.get()));
+    EXPECT_EQ(string(TWStringUTF8Bytes(accountAddress1.get())), "bc1qturc268v0f2srjh4r2zu4t6zk4gdutqd5a6zny");
+
+    const auto accountCoin2 = WRAP(TWAccount, TWStoredKeyAccountForCoinDerivation(key.get(), coin, TWDerivationBitcoinLegacy, wallet.get()));
+    const auto accountAddress2 = WRAPS(TWAccountAddress(accountCoin2.get()));
+    EXPECT_EQ(string(TWStringUTF8Bytes(accountAddress2.get())), "1NyRyFewhZcWMa9XCj3bBxSXPXyoSg8dKz");
+
+    EXPECT_EQ(TWStoredKeyAccountCount(key.get()), 2);
+}
+
 TEST(TWStoredKey, exportJSON) {
     const auto key = createDefaultStoredKey();
     const auto json = WRAPD(TWStoredKeyExportJSON(key.get()));

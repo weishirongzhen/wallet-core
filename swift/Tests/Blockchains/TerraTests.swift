@@ -43,7 +43,7 @@ class TerraTests: XCTestCase {
         let fee = CosmosFee.with {
             $0.gas = 200000
             $0.amounts = [CosmosAmount.with {
-                $0.amount = 3000
+                $0.amount = "3000"
                 $0.denom = "uluna"
             }]
         }
@@ -107,7 +107,7 @@ class TerraTests: XCTestCase {
                 $0.fromAddress = fromAddress
                 $0.toAddress = "terra1hdp298kaz0eezpgl6scsykxljrje3667d233ms"
                 $0.amounts = [CosmosAmount.with {
-                    $0.amount = 1000000
+                    $0.amount = "1000000"
                     $0.denom = "uluna"
                 }]
                 $0.typePrefix = "bank/MsgSend"
@@ -117,7 +117,7 @@ class TerraTests: XCTestCase {
         let fee = CosmosFee.with {
             $0.gas = 200000
             $0.amounts = [CosmosAmount.with {
-                $0.amount = 3000
+                $0.amount = "3000"
                 $0.denom = "uluna"
             }]
         }
@@ -177,7 +177,7 @@ class TerraTests: XCTestCase {
             $0.delegatorAddress = "terra1jf9aaj9myrzsnmpdr7twecnaftzmku2mhs2hfe"
             $0.validatorAddress = "terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0yhqtk"
             $0.amount = CosmosAmount.with {
-                $0.amount = 1000000
+                $0.amount = "1000000"
                 $0.denom = "uluna"
             }
             $0.typePrefix = "staking/MsgDelegate"
@@ -190,7 +190,7 @@ class TerraTests: XCTestCase {
         let fee = CosmosFee.with {
             $0.gas = 200000
             $0.amounts = [CosmosAmount.with {
-                $0.amount = 3000
+                $0.amount = "3000"
                 $0.denom = "uluna"
             }]
         }
@@ -257,7 +257,7 @@ class TerraTests: XCTestCase {
 
         let fee = CosmosFee.with {
             $0.amounts = [CosmosAmount.with {
-                $0.amount = 3000
+                $0.amount = "3000"
                 $0.denom = "uluna"
             }]
             $0.gas = 200000
@@ -313,7 +313,7 @@ class TerraTests: XCTestCase {
             $0.delegatorAddress = "terra1jf9aaj9myrzsnmpdr7twecnaftzmku2mhs2hfe"
             $0.validatorAddress = "terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0yhqtk"
             $0.amount = CosmosAmount.with {
-                $0.amount = 500000
+                $0.amount = "500000"
                 $0.denom = "uluna"
             }
             $0.typePrefix = "staking/MsgUndelegate"
@@ -326,7 +326,7 @@ class TerraTests: XCTestCase {
         let fee = CosmosFee.with {
             $0.gas = 200000
             $0.amounts = [CosmosAmount.with {
-                $0.amount = 3000
+                $0.amount = "3000"
                 $0.denom = "uluna"
             }]
         }
@@ -386,7 +386,7 @@ class TerraTests: XCTestCase {
             $0.validatorSrcAddress = "terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0yhqtk"
             $0.validatorDstAddress = "terravaloper1rhrptnx87ufpv62c7ngt9yqlz2hr77xr9nkcr9"
             $0.amount = CosmosAmount.with {
-                $0.amount = 500000
+                $0.amount = "500000"
                 $0.denom = "uluna"
             }
             $0.typePrefix = "staking/MsgBeginRedelegate"
@@ -399,7 +399,7 @@ class TerraTests: XCTestCase {
         let fee = CosmosFee.with {
             $0.gas = 200000
             $0.amounts = [CosmosAmount.with {
-                $0.amount = 3000
+                $0.amount = "3000"
                 $0.denom = "uluna"
             }]
         }
@@ -472,7 +472,7 @@ class TerraTests: XCTestCase {
         let fee = CosmosFee.with {
             $0.gas = 200000
             $0.amounts = [CosmosAmount.with {
-                $0.amount = 3000
+                $0.amount = "3000"
                 $0.denom = "uluna"
             }]
         }
@@ -500,4 +500,106 @@ class TerraTests: XCTestCase {
         )
         XCTAssertEqual(output.error, "")
     }
-}
+
+    func testSigningWasmTerraGenericProtobuf() {
+            let privateKey = PrivateKey(data: Data(hexString: "cf08ee8493e6f6a53f9721b9045576e80f371c0e36d08fdaf78b27a7afd8e616")!)!
+            let publicKey = privateKey.getPublicKeySecp256k1(compressed: true)
+            let fromAddress = AnyAddress(publicKey: publicKey, coin: .terra)
+
+            let wasmGenericMessage = CosmosMessage.WasmTerraExecuteContractGeneric.with {
+                $0.senderAddress = fromAddress.description
+                $0.contractAddress = "terra14z56l0fp2lsf86zy3hty2z47ezkhnthtr9yq76" // ANC
+                $0.executeMsg = """
+                {"transfer": { "amount": "250000", "recipient": "terra1d7048csap4wzcv5zm7z6tdqem2agyp9647vdyj" } }
+                """
+            }
+
+            let message = CosmosMessage.with {
+                $0.wasmTerraExecuteContractGeneric = wasmGenericMessage
+            }
+
+            let fee = CosmosFee.with {
+                $0.gas = 200000
+                $0.amounts = [CosmosAmount.with {
+                    $0.amount = "3000"
+                    $0.denom = "uluna"
+                }]
+            }
+
+            let input = CosmosSigningInput.with {
+                $0.signingMode = .protobuf;
+                $0.accountNumber = 3407705
+                $0.chainID = "columbus-5"
+                $0.memo = ""
+                $0.sequence = 7
+                $0.messages = [message]
+                $0.fee = fee
+                $0.privateKey = privateKey.data
+            }
+
+            let output: CosmosSigningOutput = AnySigner.sign(input: input, coin: .terra)
+
+            XCTAssertJSONEqual(output.serialized,
+    """
+    {
+        "tx_bytes": "Cu4BCusBCiYvdGVycmEud2FzbS52MWJldGExLk1zZ0V4ZWN1dGVDb250cmFjdBLAAQosdGVycmExOHd1a3A4NGRxMjI3d3U0bWdoMGptNm45bmxuajZyczgycHA5d2YSLHRlcnJhMTR6NTZsMGZwMmxzZjg2enkzaHR5Mno0N2V6a2hudGh0cjl5cTc2GmJ7InRyYW5zZmVyIjogeyAiYW1vdW50IjogIjI1MDAwMCIsICJyZWNpcGllbnQiOiAidGVycmExZDcwNDhjc2FwNHd6Y3Y1em03ejZ0ZHFlbTJhZ3lwOTY0N3ZkeWoiIH0gfRJnClAKRgofL2Nvc21vcy5jcnlwdG8uc2VjcDI1NmsxLlB1YktleRIjCiEDcGY6x7D5iSlv61zln7pKUNfpThziVt/yJRRZyizZrAASBAoCCAEYBxITCg0KBXVsdW5hEgQzMDAwEMCaDBpAkPsS7xlSng2LMc9KiD1soN5NLaDcUh8I9okPmsdJN3le1B7yxRGNB4aQfhaRl/8Z0r5vitRT0AWuxDasd8wcFw==",
+        "mode": "BROADCAST_MODE_BLOCK"
+    }
+    """
+            )
+            XCTAssertEqual(output.error, "")
+        }
+
+        func testSigningWasmTerraGenericWithCoins() {
+            let privateKey = PrivateKey(data: Data(hexString: "cf08ee8493e6f6a53f9721b9045576e80f371c0e36d08fdaf78b27a7afd8e616")!)!
+            let publicKey = privateKey.getPublicKeySecp256k1(compressed: true)
+            let fromAddress = AnyAddress(publicKey: publicKey, coin: .terra)
+
+            let wasmGenericMessage = CosmosMessage.WasmTerraExecuteContractGeneric.with {
+                $0.senderAddress = fromAddress.description
+                $0.contractAddress = "terra1sepfj7s0aeg5967uxnfk4thzlerrsktkpelm5s" // ANC Market
+                $0.executeMsg = """
+                { "deposit_stable": {} }
+                """
+                $0.coins = [CosmosAmount.with {
+                    $0.amount = "1000"
+                    $0.denom = "uusd"
+                }]
+            }
+
+            let message = CosmosMessage.with {
+                $0.wasmTerraExecuteContractGeneric = wasmGenericMessage
+            }
+
+            let fee = CosmosFee.with {
+                $0.gas = 600000
+                $0.amounts = [CosmosAmount.with {
+                    $0.amount = "7000"
+                    $0.denom = "uluna"
+                }]
+            }
+
+            let input = CosmosSigningInput.with {
+                $0.signingMode = .protobuf;
+                $0.accountNumber = 3407705
+                $0.chainID = "columbus-5"
+                $0.memo = ""
+                $0.sequence = 9
+                $0.messages = [message]
+                $0.fee = fee
+                $0.privateKey = privateKey.data
+            }
+
+            let output: CosmosSigningOutput = AnySigner.sign(input: input, coin: .terra)
+
+            XCTAssertJSONEqual(output.serialized,
+    """
+    {
+            "tx_bytes": "CrIBCq8BCiYvdGVycmEud2FzbS52MWJldGExLk1zZ0V4ZWN1dGVDb250cmFjdBKEAQosdGVycmExOHd1a3A4NGRxMjI3d3U0bWdoMGptNm45bmxuajZyczgycHA5d2YSLHRlcnJhMXNlcGZqN3MwYWVnNTk2N3V4bmZrNHRoemxlcnJza3RrcGVsbTVzGhh7ICJkZXBvc2l0X3N0YWJsZSI6IHt9IH0qDAoEdXVzZBIEMTAwMBJnClAKRgofL2Nvc21vcy5jcnlwdG8uc2VjcDI1NmsxLlB1YktleRIjCiEDcGY6x7D5iSlv61zln7pKUNfpThziVt/yJRRZyizZrAASBAoCCAEYCRITCg0KBXVsdW5hEgQ3MDAwEMDPJBpAGyi7f1ioY8XV6pjFq1s86Om4++CIUnd3rLHif2iopCcYvX0mLkTlQ6NUERg8nWTYgXcj6fOTO/ptgPuAtv0NWg==",
+            "mode": "BROADCAST_MODE_BLOCK"
+    }
+    """
+            )
+            XCTAssertEqual(output.error, "")
+        }
+    }
